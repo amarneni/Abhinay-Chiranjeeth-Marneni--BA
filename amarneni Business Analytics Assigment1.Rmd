@@ -1,0 +1,22 @@
+---
+title: "Business Analytics Assignment-1"
+author: "Abhinay Chiranjeeth Marneni"
+date: "2022-10-02"
+output: pdf_document
+---
+
+```{r}
+library(ISLR)
+#summary of car dataset
+summary(Carseats)
+#total Records in the Dataset
+nrow(Carseats)
+#maximum value of advertisment
+max(Carseats$Advertising)
+#Interquartile range of price
+IQR(Carseats$Price)
+#ScatterPlotting  between Sales and Prices
+plot(Carseats$Sales, Carseats$Price, main = "Scatterplot between Price and Sales", xlab = "Sales", ylab = "Price",abline(Carseats$Sales,Carseats$Price))
+#Negative Correlation value of the sales and prices
+cor(Carseats$Sales, Carseats$Price)
+```
