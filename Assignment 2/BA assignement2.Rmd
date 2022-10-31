@@ -1,0 +1,171 @@
+---
+title: "BA Assignment_2"
+author: "Abhinay Chiranjeeth Marneni"
+date: "2022-10-26"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Loading package
+```{r}
+library(zoo)
+library(dplyr)
+```
+
+# Import the Online_Retail.csv dataset
+```{r}
+Online_Retail<-read.csv("C:/Users/abhin/OneDrive/Documents/Assigments Buss 1sem/BA/Ass2/Online_Retail.csv")
+```
+
+# 1.
+
+```{r}
+summary(Online_Retail) # Summarizing onlineretail
+summary(Online_Retail$Country) # Summarizing onlineretailcountry
+country_totaltransaction<-table(Online_Retail$Country) 
+transaction_percent<-round(100*prop.table(country_totaltransaction),digits = 2)
+percentage<-cbind(country_totaltransaction,transaction_percent)
+total<-subset(percentage,transaction_percent>1.0)# the represent all countries less than 1% value of total transactions
+total  
+
+```
+
+# 2. 
+```{r}
+Online_Retail <- Online_Retail %>% mutate(TransactionValue= Quantity * UnitPrice) 
+summary(Online_Retail$TransactionValue)
+```
+
+# 3.
+```{r}
+data <- summarise(group_by(Online_Retail,Country),sum_value= sum(TransactionValue)) # group the transactionvalue by country
+Transaction <- filter(data,sum_value >130000) # filter out countries which spend less than 130000
+Transaction 
+```
+
+# 4.
+
+```{r}
+Temp=strptime(Online_Retail$InvoiceDate,format='%m/%d/%Y %H:%M',tz='GMT') # read  temporary data varaiables from dataset
+head(Temp)  # Checking  the  variable by  using,  head(Temp) command
+
+```
+
+```{r}
+Online_Retail$New_Invoice_Date <- as.Date(Temp)  # create new invoice for date
+```
+
+```{r}
+Online_Retail$New_Invoice_Date[20000]- Online_Retail$New_Invoice_Date[10] 
+```
+```{r}
+Online_Retail$Invoice_Day_Week= weekdays(Online_Retail$New_Invoice_Date) # converting new invoice date to new invoice week
+```
+
+```{r}
+Online_Retail$New_Invoice_Hour = as.numeric(format(Temp, "%H")) # create new invoice hours 
+```
+
+```{r}
+Online_Retail$New_Invoice_Month = as.numeric(format(Temp, "%m")) # separate months as numeric variable
+```
+# a)
+```{r}
+a<-summarise(group_by(Online_Retail,Invoice_Day_Week),Transaction_Value=n_distinct(InvoiceNo))
+a1<-mutate(a, transaction_percent=(Transaction_Value/sum(Transaction_Value))*100)
+a1
+```
+# b)
+```{r}
+b<-summarise(group_by(Online_Retail,Invoice_Day_Week),Transaction_Volume=sum(TransactionValue))
+b1<-mutate(b,percentage=(Transaction_Volume/sum(Transaction_Volume))*100)
+b1
+```
+# c)
+```{r}
+c<-summarise(group_by(Online_Retail,New_Invoice_Month),Transaction_Volume=sum(TransactionValue))
+c1<-mutate(c,percentage=(Transaction_Volume/sum(Transaction_Volume))*100)
+c1
+```
+# d)
+```{r}
+Online_Retail <- Online_Retail %>% mutate(TransactionValue= Quantity * UnitPrice)
+Online_Retail %>% filter(Country == 'Australia') %>% group_by(New_Invoice_Date) %>% summarise(max=max(TransactionValue))
+```
+# e)
+```{r}
+e<-summarise(group_by(Online_Retail,New_Invoice_Hour),Transaction_min=n_distinct(InvoiceNo))
+e1<-filter(e,New_Invoice_Hour>=7&New_Invoice_Hour<=20)
+e2<-rollapply(e1$Transaction_min,3,sum)
+e3<-which.min(e2)
+e3
+```
+
+# 5.   
+```{r}
+Germany_data <- subset(Online_Retail$TransactionValue,Online_Retail$Country == "Germany")
+hist(Germany_data, xlim = c (-600, 900), breaks = 100 , xlab = "Transaction Values of Germany", main = "Germany") # creating the plot for histogram of transaction values from Germany 
+```
+
+# 6. 
+```{r}
+Online_Retail1 <- na.omit(Online_Retail)
+result <- summarise(group_by(Online_Retail1,CustomerID), sum2= sum(TransactionValue))
+result[which.max(result$sum2),]
+data2 <- table(Online_Retail$CustomerID)
+data2 <- as.data.frame(data2)
+result1 <- data2[which.max(data2$Freq),] # group and summarize the highest transactions of coustmer 
+result1
+```
+
+# 7. 
+```{r}
+missing_values <- colMeans(is.na(Online_Retail)*100)
+missing_values # Calculate the missing values for each variable in dataset
+```
+
+# 8.
+```{r}
+Online_Retail2 <- Online_Retail %>% filter(is.na(CustomerID)) %>% group_by(Country)
+summary(Online_Retail2$Country) # filter and summarize the NA and total values of dataset
+```
+# 9.
+```{r}
+Online_Retail_NA_Removed <- na.omit(Online_Retail)
+Online_Retail_NA_Neg_Removed <- subset(Online_Retail_NA_Removed, Quantity > 0)
+Online_Retail_Subset <- Online_Retail_NA_Neg_Removed[,c("CustomerID","New_Invoice_Date")]
+Online_Retail_Subset_Distinct <- distinct(Online_Retail_Subset)
+Online_Retail_Subset_Distinct %>%
+  group_by(CustomerID) %>%
+  arrange(New_Invoice_Date) %>%
+  summarise(avg = mean(diff(New_Invoice_Date))) %>%
+  na.omit() %>%
+  summarise(avg_days_between_shopping = mean(avg))
+```
+# 10.
+```{r}
+Online_Retail_table <- filter(Online_Retail,Country=="France")
+totalrow <- nrow(Online_Retail_table)
+cancel <- nrow(subset(Online_Retail_table,TransactionValue<0))
+cancel
+notcancel <- totalrow-cancel 
+notcancel
+TEST2=(cancel/8556)
+TEST2 # calculate the return rate and total transaction for France
+```
+
+# 11.
+```{r}
+Transaction_Value <- tapply(Online_Retail$TransactionValue, Online_Retail$StockCode  , sum) 
+Transaction_Value[which.max(Transaction_Value)] # generate the highest revenue for retailer products
+```
+
+# 12.
+```{r}
+unique_customers <- unique(Online_Retail$CustomerID)
+length(unique_customers) # removing the duplicate entries of customerID
+```
+
