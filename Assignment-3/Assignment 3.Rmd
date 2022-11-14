@@ -1,0 +1,110 @@
+---
+title: "BA Assignment-3"
+author: "Abhinay Chiranjeeth Marneni"
+date: "2022-11-13"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# 1)To create the variables X and Y, run the following code.
+```{r}
+set.seed(2017) 
+X=runif(100)*10 
+Y=X*4+3.45 
+Y=rnorm(100)*0.29*Y+Y 
+```
+
+## a) Creating Plot for X and Y variables, the plot will allow us to fit a linear model to explain Y based on X.
+```{r}
+plot(X,Y)  
+# Yes, We are able to fit a linear model to Y given X.
+```
+
+## b) Create a simple linear model of Y based on X.And find the accuracy of linear model.
+
+```{r}
+Model<-lm(Y~X)
+Model$coefficients
+Accuracy<- 3.610759/4.465490
+Accuracy  # The accuracy of above linear model is 0.8085919
+```
+
+## c) The correlation between X and Y is related to the Coefficient of Determination, R2, of the above linear model.
+```{r}
+(cor(Y,X))^2  # To find Coefficient of Determination of model we using the                        code (Correlation Coefficient)^2
+```
+
+# 2) Utilize the mtcars dataset.
+```{r}
+data<-data("mtcars")
+head(mtcars)
+```
+## a) James wants to buy a car.  He and his friend, Chris, have different opinions about the Horse Power (hp) of cars. James think the weight of a car (wt) can be used to estimate the Horse Power of the car while Chris thinks the fuel consumption expressed in Mile Per Gallon (mpg), is a better estimator of the (hp). Who do you think is right? Construct simple linear models using mtcars data to answer the question. 
+```{r}
+Weight <- lm(mtcars$wt ~ mtcars$hp) # James opinion
+Mile <- lm(mtcars$mpg ~ mtcars$hp)  # Chris opinion
+summary(Weight)
+summary(Mile)
+# By looking at the multiple r-squared values, Chris is right; Mile Per Gallon had a high r square value of 60 percent compared to weight of the car's 43 percent.
+```
+## b) Build a model that uses the number of cylinders (cyl) and the mile per gallon (mpg) values of a car to predict the car Horse Power (hp). Using this model, what is the estimated Horse Power of a car with 4 calendar and mpg of 22.
+```{r}
+Model1<-lm(hp ~cyl + mpg, data = mtcars)
+Model1
+```
+# To perdict the car horse power.
+```{r}
+HP <- 54.067 + (23.979 *4) + (-2.775 * 22)
+HP
+```
+# 3) Install "mlbench" packages and Loading the "BostonHousing" dataset.
+```{r}
+library(mlbench)
+data(BostonHousing)
+```
+
+## a)Build a model to estimate the median value of owner-occupied homes (medv)based on the following  variables:  crime  crate  (crim),  proportion  of  residential  land  zoned  for  lots  over  25,000  sq.ft  (zn),  the  local  pupil-teacher  ratio  (ptratio)  and  weather  the  whether  the  tract  bounds Chas River(chas). Is this an accurate model.
+
+```{r}
+Accuracy1<- lm(medv~crim+zn+ptratio+chas,data=BostonHousing)
+summary(Accuracy1)
+# Due to the low R square value, the model is not accurate.
+```
+## b)
+##i) Imagine two houses that are identical in all aspects but one bounds the Chas River and the other does not. Which one is more expensive and by how much.
+```{r}
+CR1 <- lm(medv ~ chas == 1, data = BostonHousing) # Price not next to river
+summary(CR1)
+CR2 <- lm(medv ~ chas == 0, data = BostonHousing) # Price next to river 
+summary(CR2)
+# The cost of a house with a chas of 1 is higher than a house without a chas of 0
+```
+
+## ii) Imagine two houses that are identical in all aspects but in the neighborhood of one of them the pupil-teacher ratio is 15 and in the other one is 18. Which one is more expensive and by how much.
+```{r}
+summary(HP2<-lm(medv~ptratio,data = BostonHousing))
+ # If ptratio increases the housing price decreases,The price of house which has ptratio of 15 is high compared to price of house which has a ptratio of 18.
+```
+
+# c) Which of the variables are statistically important.
+```{r}
+summary(Accuracy1)
+#  So the all varaiables in the model are Statistically important.
+```
+
+# d) Use the anova analysis and determine the order of importance of these four variables. 
+
+```{r}
+anova(Accuracy1)
+## order of Importance of the varaiables 
+## 1) crim
+## 2) zn
+## 3) ptratio
+## 4)chas
+```
