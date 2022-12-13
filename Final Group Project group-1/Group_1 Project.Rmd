@@ -1,0 +1,113 @@
+---
+title: "Untitled"
+author: "Abhinay Chiranjeeth Marneni"
+date: "2022-12-10"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## loading library functions packages
+```{r}
+library(dplyr)
+library(pROC)
+library(plyr)
+library(ggplot2)
+library(caret)
+library(party)
+library(rpart)
+library(rpart.plot)
+library(esquisse)
+library(ggplot2)
+library(readr)
+```
+#Loading the Churn file
+```{r}
+Churn_Train <- read_csv("C:/Users/HUAWEI/Downloads/Churn_Train.csv")
+View(Churn_Train)
+data = Churn_Train
+summary(data)
+```
+
+# analysing count of NA value in the dataset
+```{r}
+sapply(data, function(x) sum(is.na(x))) # NA data
+```
+
+## removing NA values
+```{r}
+data<- na.omit(data)
+```
+
+
+## removing Negative values
+```{r}
+abs(data$account_length + data$number_vmail_messages)
+```
+
+#Analysising Outliers 
+```{r}
+boxplot_data = data
+boxplot_data$state=NULL
+boxplot_data$area_code= NULL
+boxplot_data$international_plan=NULL
+boxplot_data$voice_mail_plan=NULL
+boxplot_data$churn=NULL
+
+boxplot(boxplot_data)
+```
+
+```{r}
+data$churn<- as.factor(data$churn)
+data$churn = factor(data$churn,levels(data$churn)[c(2,1)])
+summary(data$churn)
+str(data)
+```
+```{r}
+
+
+ggplot(data) +
+ aes(x = churn) +
+ geom_bar(fill = "#4682B4") +
+ theme_minimal()
+```
+
+##Churn Train data partitioning (70%,30%)
+```{r}
+partition<- createDataPartition(data$churn,p=0.7,list=FALSE)
+train<-data[partition,]
+validation<- data[-partition,]
+```
+
+# Accuracy for logistic regression 
+```{r}
+Model <- glm(churn ~ .,family=binomial(link="logit"),data=validation)
+summary(Model)
+predict_validation<-predict(Model,newdata = validation,type='response')
+resultcheck<-ifelse(predict_validation > 0.5, "no", "yes")
+
+
+resultcheck_new<- as.factor(resultcheck)
+resultcheck_new = factor(resultcheck_new,levels(resultcheck_new)[c(2,1)])
+
+New<-cbind(validation,resultcheck_new)
+
+confusionMatrix(validation$churn,resultcheck_new)
+```
+
+#Predicting churn value on Test data using the above model:
+```{r}
+Predict_data<-predict(Model,data=Customers_To_Predict,type="response")
+View(Predict_data)
+```
+
+
+## Using AUC (Area under Curve)For model checking
+```{r}
+roc(as.numeric(validation$churn), as.numeric(Predict_data))
+plot(roc(as.numeric(validation$churn), as.numeric(Predict_data)))
+```
